@@ -4,6 +4,7 @@ use parent Serge::Sync::Plugin::Base::TranslationService, Serge::Interface::SysC
 use strict;
 
 use Serge::Util qw(subst_macros read_and_normalize_file);
+use File::Temp;
 
 sub name {
     return 'Crowdin Translation Service (https://crowdin.com/) synchronization plugin';
@@ -47,7 +48,6 @@ sub prepare_crowdin_cli_config {
     my ($self) = @_;
 
     print "\nProcessing Crowdin config template: ".$self->{data}->{crowdin_config_template_path};
-    print "\nUsing API key: ".$self->{data}->{crowdin_project_api_key};
     print "\nUsing Base path: ".$self->{data}->{project_base_path};
 
     my $crowdin_config_template_content = read_and_normalize_file($self->{data}->{crowdin_config_template_path});
@@ -55,11 +55,14 @@ sub prepare_crowdin_cli_config {
     $crowdin_config_template_content =~ s/%API_KEY%/$self->{data}->{crowdin_project_api_key}/ge;
     $crowdin_config_template_content =~ s/%BASE_PATH%/$self->{data}->{project_base_path}/ge;
 
-    my $crowdin_config_file_path = $self->{data}->{project_base_path}."/corwdin.yaml";
+    my $crowdin_config_file_path = tmpnam();
+    #    my $crowdin_config_file_path = $self->{data}->{project_base_path}."/crowdin.yaml";
 
     open(my $fh, '>', $crowdin_config_file_path) or die "Could not open file for write access'".$crowdin_config_file_path."'";
     print $fh $crowdin_config_template_content;
     close $fh;
+
+    print "\nSaved Crowdin config into: ".$crowdin_config_file_path;
 
     return $crowdin_config_file_path
 }
