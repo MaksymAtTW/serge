@@ -82,7 +82,7 @@ sub pull_ts {
 
 sub push_ts {
     my ($self, $langs) = @_;
-    print "\nUpload translation from Crowdin";
+    print "\nUpload translation to Crowdin";
 
     my $crowdin_cli_config_path = prepare_crowdin_cli_config($self);
 
