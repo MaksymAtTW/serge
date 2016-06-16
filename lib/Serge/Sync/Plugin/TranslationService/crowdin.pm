@@ -35,6 +35,7 @@ sub validate_data {
     $self->{data}->{project_base_path} = subst_macros( $self->{data}->{project_base_path} );
     $self->{data}->{crowdin_project_api_key} = subst_macros( $self->{data}->{crowdin_project_api_key} );
 
+    die "'JAVA_HOME' env variable not defined" unless defined $ENV{'JAVA_HOME'};
     die "'crowdin_cli_path' not defined" unless defined $self->{data}->{crowdin_cli_path};
     die "'crowdin_project_api_key' not defined" unless defined $self->{data}->{crowdin_project_api_key};
 
@@ -55,14 +56,16 @@ sub prepare_crowdin_cli_config {
     $crowdin_config_template_content =~ s/%API_KEY%/$self->{data}->{crowdin_project_api_key}/ge;
     $crowdin_config_template_content =~ s/%BASE_PATH%/$self->{data}->{project_base_path}/ge;
 
-    my $crowdin_config_file_path = tmpnam();
-    #    my $crowdin_config_file_path = $self->{data}->{project_base_path}."/crowdin.yaml";
+    my $file = tmpnam();
+
+    my $crowdin_config_file_path = $file;
+    print "\nSave Crowdin config into: ".$crowdin_config_file_path;
+#    my $crowdin_config_file_path = $self->{data}->{project_base_path}."/crowdin.yaml";
 
     open(my $fh, '>', $crowdin_config_file_path) or die "Could not open file for write access'".$crowdin_config_file_path."'";
     print $fh $crowdin_config_template_content;
     close $fh;
 
-    print "\nSaved Crowdin config into: ".$crowdin_config_file_path;
 
     return $crowdin_config_file_path
 }
@@ -73,22 +76,22 @@ sub pull_ts {
 
     my $crowdin_cli_config_path = prepare_crowdin_cli_config($self);
 
-    my $command = "java -jar ".$self->{data}->{crowdin_cli_path}." -c ".$crowdin_cli_config_path." download";
+    my $command = $ENV{'JAVA_HOME'}."/bin/java -jar ".$self->{data}->{crowdin_cli_path}." -c ".$crowdin_cli_config_path." download";
 
-    print "\nRunning Crowdin command ".$command." \n\n";
+    #print "\nRunning Crowdin command ".$command." \n\n";
 
     return $self->run_cmd( $command, 1 );
 }
 
 sub push_ts {
     my ($self, $langs) = @_;
-    print "\nUpload translation to Crowdin";
+    print "\nUpload translation from Crowdin";
 
     my $crowdin_cli_config_path = prepare_crowdin_cli_config($self);
 
-    my $command = "java -jar ".$self->{data}->{crowdin_cli_path}." -c ".$crowdin_cli_config_path." upload source";
+    my $command = $ENV{'JAVA_HOME'}."/bin/java -jar ".$self->{data}->{crowdin_cli_path}." -c ".$crowdin_cli_config_path." upload source";
 
-    print "\nRunning Crowdin command ".$command." \n\n";
+    #print "\nRunning Crowdin command ".$command." \n\n";
 
     return $self->run_cmd( $command, 1 );
 }
